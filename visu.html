@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Herb-Drug Interaction Explorer</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Inter, Arial, sans-serif;
+            background: #f5f7fb;
+            color: #1f2937;
+            overflow: hidden;
+        }
+
+        .app {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* ================= SIDEBAR ================= */
+
+        .sidebar {
+            width: 360px;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 18px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .sidebar-header h1 {
+            margin: 0 0 14px;
+            font-size: 22px;
+        }
+
+        .upload-area {
+            margin-bottom: 12px;
+        }
+
+        .upload-label {
+            display: inline-block;
+            width: 100%;
+            background: #2563eb;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .upload-label:hover {
+            background: #1d4ed8;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #d1d5db;
+            outline: none;
+        }
+
+        .article-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .article-item {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .article-item:hover {
+            background: #eef2ff;
+            border-color: #c7d2fe;
+        }
+
+        .article-item.active {
+            border-color: #2563eb;
+            background: #dbeafe;
+        }
+
+        .article-title {
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .article-summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            padding: 5px 8px;
+            border-radius: 999px;
+            font-weight: 600;
+        }
+
+        .tag-target {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .tag-herb {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .tag-drug {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        /* ================= BABINE ================= */
+
+        .babine-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .babine-1 {
+            background: #16a34a;
+        }
+
+        .babine-2 {
+            background: #eab308;
+            color: #111827;
+        }
+
+        .babine-3 {
+            background: #dc2626;
+        }
+
+        /* ================= MAIN ================= */
+
+        .main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px;
+        }
+
+        .empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 20px;
+            color: #6b7280;
+        }
+
+        .paper-header {
+            background: white;
+            border-radius: 18px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .paper-title {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .paper-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .meta-chip {
+            background: #eff6ff;
+            color: #1e40af;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .entry-card {
+            background: white;
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .entry-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .entry-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin-top: 18px;
+        }
+
+        .section {
+            background: #f9fafb;
+            border-radius: 14px;
+            padding: 16px;
+        }
+
+        .section h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        .field {
+            margin-bottom: 10px;
+        }
+
+        .field-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #6b7280;
+            margin-bottom: 3px;
+            text-transform: uppercase;
+        }
+
+        .field-value {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .abstract {
+            margin-top: 20px;
+            background: #f8fafc;
+            padding: 18px;
+            border-radius: 14px;
+            line-height: 1.7;
+        }
+
+        .translation-tabs {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            margin-bottom: 14px;
+        }
+
+        .tab-btn {
+            border: none;
+            background: #e5e7eb;
+            padding: 8px 14px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .tab-btn.active {
+            background: #2563eb;
+            color: white;
+        }
+
+        .translation-content {
+            background: #f9fafb;
+            border-radius: 14px;
+            padding: 16px;
+            line-height: 1.7;
+        }
+
+        .doi-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        .doi-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 900px) {
+            .app {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: 40%;
+            }
+
+            .main {
+                height: 60%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+
+            <div class="sidebar-header">
+                <h1>📚 Interaction Explorer</h1>
+
+                <div class="upload-area">
+                    <label class="upload-label">
+                        Import JSON File
+                        <input type="file" id="fileInput" accept=".json">
+                    </label>
+                </div>
+
+                <input type="text" id="searchInput" class="search-box"
+                    placeholder="Search article, herb, drug, target..." />
+            </div>
+
+            <div class="article-list" id="articleList"></div>
+
+        </aside>
+
+        <!-- MAIN -->
+        <main class="main" id="mainContent">
+            <div class="empty-state">
+                Import a JSON file to begin
+            </div>
+        </main>
+
+    </div>
+
+    <script>
+
+        let groupedArticles = {};
+        let currentArticle = null;
+
+        const articleList = document.getElementById('articleList');
+        const mainContent = document.getElementById('mainContent');
+        const searchInput = document.getElementById('searchInput');
+
+        /* ================= FILE IMPORT ================= */
+
+        document.getElementById('fileInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+                try {
+                    const json = JSON.parse(event.target.result);
+
+                    groupedArticles = json;
+
+                    renderSidebar(json);
+
+                    const firstKey = Object.keys(json)[0];
+                    if (firstKey) {
+                        renderArticle(firstKey);
+                    }
+
+
+                } catch (err) {
+                    alert("Invalid JSON file");
+
+                    console.error(err);
+                }
+            };
+
+            reader.readAsText(file);
+        });
+
+        /* ================= SEARCH ================= */
+
+        searchInput.addEventListener('input', () => {
+            renderSidebar(groupedArticles);
+        });
+
+        /* ================= SIDEBAR ================= */
+
+        function renderSidebar(data) {
+
+            articleList.innerHTML = '';
+
+            const search = searchInput.value.toLowerCase();
+
+            Object.entries(data).forEach(([articleTitle, entries]) => {
+
+                const searchableText =
+                    articleTitle +
+                    JSON.stringify(entries);
+
+                if (!searchableText.toLowerCase().includes(search)) return;
+
+                const first = entries[0];
+
+                if (!first) {
+                    return
+                }
+
+                const herbNames = [...new Set(entries.map(e =>
+                    e.herb?.herb_vernacular_name || 'Unknown'
+                ))];
+
+                const targets = [...new Set(entries.map(e =>
+                    e.target || 'Unknown'
+                ))];
+
+                const drugNames = [...new Set(entries.map(e =>
+                    e.drug?.drug_INN || 'Unknown'
+                ))];
+
+                const articleDiv = document.createElement('div');
+                articleDiv.className =
+                    'article-item' +
+                    (currentArticle === articleTitle ? ' active' : '');
+
+                articleDiv.onclick = () => renderArticle(articleTitle);
+
+
+                articleDiv.innerHTML = `
+      <div class="article-title">
+        ${articleTitle.replace('.pdf', '')}
+      </div>
+
+      <div class="article-summary">
+
+        ${first.babine ? `
+          <span class="babine-badge babine-${first.babine}">
+            ${first.babine}
+          </span>
+        ` : ''}
+
+        ${targets.map(t =>
+                    `<span class="tag tag-target">${t}</span>`
+                ).join('')}
+
+        ${herbNames.map(h =>
+                    `<span class="tag tag-herb">${h}</span>`
+                ).join('')}
+
+        ${drugNames.map(d =>
+                    `<span class="tag tag-drug">${d}</span>`
+                ).join('')}
+
+      </div>
+    `;
+
+                articleList.appendChild(articleDiv);
+            });
+        }
+
+        /* ================= MAIN ARTICLE ================= */
+
+        function renderArticle(articleTitle) {
+
+            currentArticle = articleTitle;
+
+            renderSidebar(groupedArticles);
+
+            const entries = groupedArticles[articleTitle];
+
+            if (!entries || entries.length === 0) return;
+
+            const metadata = entries[0].metadata || {};
+
+            mainContent.innerHTML = `
+    <div class="paper-header">
+
+      <div class="paper-title">
+        ${metadata.title || articleTitle}
+      </div>
+
+      <div>
+        <strong>Journal:</strong>
+        ${metadata.journal?.full_name || 'N/A'}
+      </div>
+
+      <div style="margin-top:8px;">
+        <strong>Date:</strong>
+        ${metadata.date || 'N/A'}
+      </div>
+
+      <div style="margin-top:8px;">
+        <strong>DOI:</strong>
+        ${metadata.doi
+                    ? `<a class="doi-link" target="_blank"
+               href="https://doi.org/${metadata.doi}">
+               ${metadata.doi}
+             </a>`
+                    : 'N/A'
+                }
+      </div>
+
+      <div class="paper-meta">
+        <div class="meta-chip">
+          ${metadata.article_type || 'Unknown'}
+        </div>
+
+        ${entries[0].babine
+                    ? `
+            <div class="meta-chip">
+              Babine Score:
+              <span class="babine-badge babine-${entries[0].babine}">
+                ${entries[0].babine}
+              </span>
+            </div>
+          `
+                    : ''
+                }
+      </div>
+
+    </div>
+
+    ${entries.map((entry, index) => createEntryCard(entry, index)).join('')}
+  `;
+        }
+
+        /* ================= ENTRY CARD ================= */
+
+        function createEntryCard(entry, index) {
+
+            const translationId = `translation-${index}`;
+
+            return `
+    <div class="entry-card">
+
+      <div class="entry-top">
+
+        <div class="entry-title">
+          ${entry.target || 'Unknown Target'}
+        </div>
+
+        ${entry.babine
+                    ? `
+            <span class="babine-badge babine-${entry.babine}">
+              ${entry.babine}
+            </span>
+          `
+                    : ''
+                }
+
+      </div>
+
+      <div class="grid">
+
+        <!-- HERB -->
+
+        <div class="section">
+          <h3>🌿 Herb</h3>
+
+          ${field("Name", entry.herb?.herb_vernacular_name)}
+          ${field("Scientific", buildScientificName(entry.herb))}
+          ${field("Molecule", entry.herb?.herbal_molecule)}
+          ${field("Preparation", entry.herb?.herb_preparation_process)}
+          ${field("Part", entry.herb?.herb_part)}
+          ${field("Effect", entry.herb?.herb_effect)}
+
+        </div>
+
+        <!-- DRUG -->
+
+        <div class="section">
+          <h3>💊 Drug</h3>
+
+          ${field("Commercial", entry.drug?.drug_commercial_name)}
+          ${field("INN", entry.drug?.drug_INN)}
+          ${field("Dosage", entry.drug?.drug_dosage)}
+          ${field("Posology", entry.drug?.drug_posology)}
+          ${field("Effect", entry.drug?.drug_effect)}
+
+        </div>
+
+      </div>
+
+      <div class="abstract">
+        <strong>Summary:</strong><br><br>
+        ${entry.EN || 'No summary available'}
+      </div>
+
+      <div class="translation-tabs">
+        <button class="tab-btn active"
+          onclick="showTranslation('${translationId}', 'en', this)">
+          English
+        </button>
+
+        <button class="tab-btn"
+          onclick="showTranslation('${translationId}', 'fr', this)">
+          Français
+        </button>
+
+        <button class="tab-btn"
+          onclick="showTranslation('${translationId}', 'remarks', this)">
+          Remarks
+        </button>
+      </div>
+
+      <div class="translation-content"
+           id="${translationId}">
+
+        ${entry.translations?.english_text || 'No translation'}
+
+      </div>
+
+    </div>
+  `;
+        }
+
+        /* ================= HELPERS ================= */
+
+        function field(label, value) {
+            return `
+    <div class="field">
+      <div class="field-label">${label}</div>
+      <div class="field-value">${value || 'N/A'}</div>
+    </div>
+  `;
+        }
+
+        function buildScientificName(herb) {
+
+            if (!herb) return 'N/A';
+
+            if (herb.herb_scientific_name)
+                return herb.herb_scientific_name;
+
+            const genus = herb.herb_genus || '';
+            const species = herb.herb_species || '';
+
+            return `${genus} ${species}`.trim() || 'N/A';
+        }
+
+        function showTranslation(id, lang, btn) {
+
+            const container = document.getElementById(id);
+
+            const entryCard = btn.closest('.entry-card');
+            const buttons = entryCard.querySelectorAll('.tab-btn');
+
+            buttons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const articleTitle = currentArticle;
+            const entries = groupedArticles[articleTitle];
+
+            const index = id.split('-')[1];
+            const entry = entries[index];
+
+            if (lang === 'en') {
+                container.innerHTML =
+                    entry.translations?.english_text || 'No English text';
+            }
+
+            if (lang === 'fr') {
+                container.innerHTML =
+                    entry.translations?.french_text || 'No French text';
+            }
+
+            if (lang === 'remarks') {
+                container.innerHTML =
+                    entry.translations?.remarks || 'No remarks';
+            }
+        }
+
+    </script>
+
+</body>
+
+</html>
